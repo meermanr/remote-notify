@@ -107,6 +107,13 @@ def server():
 
         rMessage = "<i>%s</i>\n\n" % rTime + rMessage
 
+        print "-" * 80
+        print "    Time:", rTime
+        print "Priority:", rPriority
+        print "  Source:", rSource
+        print "   Title:", rTitle
+        print " Message:", rMessage
+
         rIconPath = dSource.get(rSource, dSource["default"])
 
         sNotification = pynotify.Notification(
@@ -121,13 +128,6 @@ def server():
         sNotification.set_timeout(iTimeout)
 
         sNotification.show()
-
-        print "-" * 80
-        print "    Time:", rTime
-        print "Priority:", rPriority
-        print "  Source:", rSource
-        print "   Title:", rTitle
-        print " Message:", rMessage
 
 # -----------------------------------------------------------------------------
 def client(sOptions, lArgs):
