@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# vim: encoding=utf8
+# vim: fileencoding=utf8
 b"This line is a syntax error in Python versions older than v2.6."
 
 """
@@ -91,6 +91,8 @@ def server():
             pass
 
         sConn.close()
+
+        rMessage = rMessage.decode("utf8", "ignore")
 
         rPriority, rSource, rTitle, rMessage = rMessage.split("\0")
         rTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
