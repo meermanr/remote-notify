@@ -27,10 +27,10 @@ grHOST = "e102928-lin"  # Name of host on which to launch web-pages etc
 
 grBaseDir = os.path.dirname( os.path.abspath( __file__ ) )
 
-ICON_OUTLOOK    = "file://" + grBaseDir + "/icons/outlook.png"
-ICON_OFFICE     = "file://" + grBaseDir + "/icons/office.png"
-ICON_WINDOWS    = "file://" + grBaseDir + "/icons/windows.png"
-ICON_TI2        = "file://" + grBaseDir + "/icons/ti2.png"
+ICON_OUTLOOK    = grBaseDir + "/icons/outlook.png"
+ICON_OFFICE     = grBaseDir + "/icons/office.png"
+ICON_WINDOWS    = grBaseDir + "/icons/windows.png"
+ICON_TI2        = grBaseDir + "/icons/ti2.png"
 
 # -----------------------------------------------------------------------------
 def server():
@@ -99,10 +99,12 @@ def server():
 
         rMessage = "<i>%s</i>\n\n" % rTime + rMessage
 
+        rIconPath = dSource.get(rSource, dSource["default"])
+
         sNotification = pynotify.Notification(
             rTitle,
             rMessage,
-            dSource.get(rSource, dSource["default"]),
+            rIconPath,
             )
 
         sUrgency, iTimeout = dPriority.get(rPriority, dPriority["normal"])
