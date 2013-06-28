@@ -105,6 +105,18 @@ def server():
         rPriority, rSource, rTitle, rMessage = rMessage.split("\0")
         rTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
+        if rSource == "outlook":
+            # Special case - trim message length
+            lLines = rMessage.splitlines()
+            for i, rLine in enumerate(lLines):
+                if rLine.lower().startswith("dear"):
+                    continue
+                if not rLine.strip():
+                    continue
+                rMessage = "\n".join( lLines[i:i+3] )
+                break
+
+
         rMessage = "<i>%s</i>\n\n" % rTime + rMessage
 
         print "-" * 80
