@@ -17,6 +17,34 @@ Therefore I recommend installing the older `notificaton-daemon` and replacing
 `notify-osd` [1]_.
 
 .. [1] http://ubuntuforums.org/showpost.php?p=8559795&postcount=8
+
+Outlook 2007
+============
+
+Here is a Visual Basic for Applications script to make Outlook 2007 send 
+notifications via this script. Note that the original script contains *literal* 
+triple-double-quotation, which has to be escaped to avoid problems with 
+Python::
+
+    Sub RunAScriptRuleRoutine(MyMail As MailItem)
+        Dim strID As String
+        Dim olNS As Outlook.NameSpace
+        Dim msg As Outlook.MailItem
+
+        strID = MyMail.EntryID
+        Set olNS = Application.GetNamespace("MAPI")
+        Set msg = olNS.GetItemFromID(strID)
+        ' do stuff with msg, e.g.
+        'MsgBox msg.Subject
+
+        Dim cmd As String
+        cmd = ""\"C:\Python26\python.exe"" ""H:\work\remote-notify\remote-notify.py"" ""outlook"" ""\" & msg.Subject & ""\" ""\" & msg.Body & ""\""
+        Shell cmd, vbHide
+
+        Set msg = Nothing
+        Set olNS = Nothing
+    End Sub
+
 """
 __docformat__ = "restructuredtext en"
 
