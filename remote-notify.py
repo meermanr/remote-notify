@@ -181,12 +181,14 @@ def main():
     from optparse import OptionParser
 
     sParser = OptionParser(
-            usage="%prog <source> <title> <message>",
+            usage="%prog [options] [<source> <title> <message>]",
             description=" ".join(
                 x.strip() for x in
                 """\
                 This script acts and client and server for the transmission 
                 and display (respectively) of notification messages.
+
+                Launch with --server to display messages.
                 """.splitlines()
             )
         )
