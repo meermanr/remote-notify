@@ -68,11 +68,19 @@ def server():
     import socket
     import subprocess as sp
 
+    iPORT = giPORT
+
+    if socket.gethostname() == grHOST:
+        # Running on server proper, and not via some SSH tunnel etc. Allow 
+        # room for SSH tunnelling by using alternative port number
+        iPORT += 1
+        print "Using alternative port number: %d" % iPORT
+
     sSock = socket.socket()
-    sSock.bind( ("", giPORT) )
+    sSock.bind( ("", iPORT) )
     sSock.listen(1)
 
-    print "Listening on", giPORT
+    print "Listening on", iPORT
 
     while True:
         sConn, tAddr = sSock.accept()
@@ -153,7 +161,11 @@ def client(sOptions, lArgs):
     import subprocess as sp
 
     sConn = socket.socket()
-    sConn.connect( (grHOST, giPORT) )
+    try:
+        sConn.connect( (grHOST, giPORT) )
+    except socket.error:
+        # Try alternative port number
+        sConn.connect( (grHOST, giPORT+1) )
     sConn.sendall( rMessage )
     sConn.shutdown( socket.SHUT_WR )    # Indicate finished
 
