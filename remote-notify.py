@@ -3,6 +3,38 @@
 b"This line is a syntax error in Python versions older than v2.6."
 
 """
+Simple client + server for passing notifications from one system to another. 
+Primarily intended to capture notifications from MS Outlook in an WinXP VM and 
+tunnel them to either the host Linux environment, or over an SSH session to my 
+personal PC (e.g. when working from home).
+
+Usage
+=====
+
+    1. First, modify the hostname in this script to match your primary 
+       workstation (where you want to see the notifications)
+
+    2. Run "./remote-notify.py --server" on this system
+
+    3. Install this same script (including the modifications made in step 1!) 
+       on the systems you want to transmit notifications, e.g. your Windows 
+       virtual machine. Script that system to call::
+
+            ./remote-notify.py <SourceApp> <NotificationSubject> <NotificationBody>
+
+       For example::
+
+            ./remote-notify.py outlook "SIGPUB" "Meet in lobby at 12h30 for trip to Robin Hood"
+            ./remote-notify.py ti2 "EBM Crash" "Executor Board Manager on 10.6.120.3 crashed ..."
+
+       Note that the body can contain multiple lines, so long as you can 
+       prevent your OS from mangling the string you want to send.
+
+       Below is a sample Visual Basic for Application (VBA) project with 
+       installation instructions which allows you to trigger notifications 
+       from Microsoft Outlook 2007, complete with message subject + bodies 
+       from incoming mail.
+
 Recommendations
 ===============
 
@@ -45,13 +77,26 @@ Python::
         Set olNS = Nothing
     End Sub
 
+(Be sure to update the "cmd" to match your environment!)
+
+Create a VBA project to house the above. This is *not* a macro, but a script 
+which will be invoked from one or more mail filtering rules. Create a rule 
+(Tools > Rules and Alerts...) with an action "run a script", and select the 
+project + method you created above.
+
+Every time you restart Outlook, you will be prompted to enable this macro the 
+fist time it is executed. To avoid this you need to sign the VGA project with 
+a certificate. This is quite easy: 
+
+    http://office.microsoft.com/en-gb/outlook-help/digitally-sign-a-macro-project-HA001231781.aspx#BM12
+
 """
 __docformat__ = "restructuredtext en"
 
 import os
 
 giPORT = 6683           # That's "note" in T9 predictive text
-grHOST = "e102928-lin"  # Name of host on which to launch web-pages etc
+grHOST = "e102928-lin"  # Name of host to which notifications are sent
 
 grBaseDir = os.path.dirname( os.path.abspath( __file__ ) )
 
