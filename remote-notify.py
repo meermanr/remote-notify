@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# vim: fileencoding=utf8
+# vim: set fileencoding=utf8 sw=4 ts=4 sts=4 et:
 b"This line is a syntax error in Python versions older than v2.6."
 
 """
@@ -96,7 +96,7 @@ __docformat__ = "restructuredtext en"
 import os
 
 giPORT = 6683           # That's "note" in T9 predictive text
-grHOST = "e102928-lin"  # Name of host to which notifications are sent
+grHOST = "Az-Pro"       # Name of host to which notifications are sent
 
 grBaseDir = os.path.dirname( os.path.abspath( __file__ ) )
 
@@ -111,30 +111,18 @@ def server():
     Display notifications sent via TCP/IP.
     """
     import sys
+    import platform
 
-    try:
-        import pynotify
-    except ImportError:
-        print >> sys.stderr, "Cannot import 'pynotify', please install " \
-                             "'python-notify' package."
-        exit(1)
+    rSystem = platform.system()
+    assert rSystem in ("Linux", "Darwin"), "Unsupported platform!"
 
-    if not pynotify.init("Remote Notification Service"):
-        print >> sys.stderr, "Could not initialise pynotify"
-        exit(1)
+    if rSystem == "Linux":
+        init_linux()
 
-    dPriority = {
-            "low":      (pynotify.URGENCY_LOW,      3600*1000),
-            "normal":   (pynotify.URGENCY_NORMAL,   8*3600*1000),
-            "critical": (pynotify.URGENCY_CRITICAL, 72*3600*1000),
-            }
-
-    dSource = {
-            "default":  None,
-            "outlook":  ICON_OUTLOOK,
-            "window":   ICON_WINDOWS,
-            "office":   ICON_OFFICE,
-            "ti2":      ICON_TI2,
+    dTimeout = {
+            "low":      3600*1000,
+            "normal":   8*3600*1000,
+            "critical": 72*3600*1000,
             }
 
     import time
@@ -176,7 +164,8 @@ def server():
         rMessage = rMessage.decode("utf8", "ignore")
 
         rPriority, rSource, rTitle, rMessage = rMessage.split("\0")
-        rTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+        iTimeout = dTimeout.get(rPriority, dTimeout["normal"])
+        rTime = time.strftime("%Y-%m-%d %H:%M", time.gmtime())
 
         if rSource == "outlook":
             # Special case - trim message length
@@ -189,9 +178,6 @@ def server():
                 rMessage = "\n".join( lLines[i:i+3] )
                 break
 
-
-        rMessage = "<i>%s</i>\n\n" % rTime + rMessage
-
         print "-" * 80
         print "    Time:", rTime
         print "Priority:", rPriority
@@ -199,20 +185,70 @@ def server():
         print "   Title:", rTitle
         print " Message:", rMessage
 
-        rIconPath = dSource.get(rSource, dSource["default"])
+        if rSystem == 'Linux':
+            display_linux(rTime, rTitle, rMessage, rSource, rPriority, iTimeout)
+        elif rSystem == 'Darwin':
+            display_darwin(rTime, rTitle, rMessage, rSource, rPriority, iTimeout)
 
-        sNotification = pynotify.Notification(
-            rTitle,
-            rMessage,
-            rIconPath,
-            )
+# -----------------------------------------------------------------------------
+def init_linux():
+    try:
+        import pynotify
+    except ImportError:
+        print >> sys.stderr, "Cannot import 'pynotify', please install " \
+                             "'python-notify' package."
+        exit(1)
 
-        sUrgency, iTimeout = dPriority.get(rPriority, dPriority["normal"])
+    if not pynotify.init("Remote Notification Service"):
+        print >> sys.stderr, "Could not initialise pynotify"
+        exit(1)
 
-        sNotification.set_urgency(sUrgency)
-        sNotification.set_timeout(iTimeout)
+# -----------------------------------------------------------------------------
+def display_linux(rTime, rTitle, rMessage, rSource, rPriority, iTimeout):
+    import pynotify
+    dUrgency = {
+            "low":      pynotify.URGENCY_LOW,
+            "normal":   pynotify.URGENCY_NORMAL,
+            "critical": pynotify.URGENCY_CRITICAL,
+            }
 
-        sNotification.show()
+    dIcon = {
+            "default":  None,
+            "outlook":  ICON_OUTLOOK,
+            "window":   ICON_WINDOWS,
+            "office":   ICON_OFFICE,
+            "ti2":      ICON_TI2,
+            }
+
+
+    rIconPath = dIcon.get(rSource, dIcon["default"])
+    sUrgency = dUrgency.get(rPriority, dUrgency["normal"])
+    rMessage = ("<i>%s</i>\n\n" % rTime) + rMessage
+
+    sNotification = pynotify.Notification(
+        rTitle,
+        rMessage,
+        rIconPath,
+        )
+
+    sNotification.set_urgency(sUrgency)
+    sNotification.set_timeout(iTimeout)
+
+    sNotification.show()
+
+# -----------------------------------------------------------------------------
+def display_darwin(rTime, rTitle, rMessage, rSource, rPriority, iTimeout):
+    import subprocess
+
+    rMessage = "[%s] %s" % (rTime, rMessage)
+    lCMD = ["terminal-notifier",
+            "-message", "\\" + rMessage,
+            "-title", rTitle,
+            "-group", rSource,
+            ]
+    print lCMD
+
+    subprocess.check_call(lCMD)
 
 # -----------------------------------------------------------------------------
 def client(sOptions, lArgs):
@@ -245,12 +281,11 @@ def client(sOptions, lArgs):
     import socket
     import subprocess as sp
 
-    sConn = socket.socket()
     try:
-        sConn.connect( (grHOST, giPORT) )
+        sConn = socket.create_connection( (grHOST, giPORT) )
     except socket.error:
         # Try alternative port number
-        sConn.connect( (grHOST, giPORT+1) )
+        sConn = socket.create_connection( (grHOST, giPORT+1) )
     sConn.sendall( rMessage )
     sConn.shutdown( socket.SHUT_WR )    # Indicate finished
 
